@@ -218,15 +218,17 @@
    ============================================================ */
 const CONFIG = {
   firebase: {
-   apiKey: "AIzaSyBj2m-lFTEh-jh65oDGvIiPfY3mcQ94keE",
-  authDomain: "physics-20153.firebaseapp.com",
-  projectId: "physics-20153",
-  storageBucket: "physics-20153.firebasestorage.app",
-  messagingSenderId: "1084227025240",
-  appId: "1:1084227025240:web:8b0f06a8996d7b47058d2d"
+    apiKey: "YOUR_FIREBASE_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
   },
   // Google Apps Script Web App URL (deployed as Web App, access: Anyone)
-  appsScriptUrl: "https://script.google.com/macros/s/AKfycbwqf9Fxm173u3KrgEY7Ip4JnnCZlNKwAozVsNc76z6kqmL0RFXL9785IJe0OVjv5StT1w/exec",
+  appsScriptUrl: "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec",
+  // Shared secret — must match API_SECRET in Code.gs. Sent as `token` in every Apps Script request.
+  apiSecret: "YOUR_API_SECRET",
   // Allowed file types & max size (MB) — mirrored in Apps Script
   allowedTypes: ["pdf","doc","docx","ppt","pptx","xls","xlsx","jpg","jpeg","png"],
   maxFileSizeMB: 25,
@@ -701,6 +703,7 @@ async function startUpload(){
 
   const payload = {
     action: "upload",
+    token: CONFIG.apiSecret,
     subjectId: document.getElementById("upSubject").value,
     class: document.getElementById("upClass").value,
     topicId: document.getElementById("upTopic").value,
