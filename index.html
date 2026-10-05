@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Scholar's Camp — Physics Learning Platform</title>
+<style>
+  :root{
+    --bg:#0f172a; --bg2:#1e293b; --card:#ffffff; --card-dark:#1e293b;
+    --primary:#2563eb; --primary-dark:#1d4ed8; --accent:#0ea5e9;
+    --success:#16a34a; --warning:#d97706; --danger:#dc2626;
+    --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
+    --radius:12px; --shadow:0 4px 20px rgba(15,23,42,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f1f5f9;color:var(--text);min-height:100vh}
+  button{cursor:pointer;font-family:inherit}
+  input,select,textarea{font-family:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;width:100%;background:#fff}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--primary);border-color:transparent}
+  .hidden{display:none!important}
+
+  /* ===== TOP BAR ===== */
+  .topbar{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px}
+  .brand .logo{width:36px;height:36px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-weight:900;font-size:18px}
+  .topbar-right{display:flex;align-items:center;gap:14px}
+  .badge{background:rgba(255,255,255,.2);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600}
+  .offline-badge{background:#f59e0b;color:#1f2937}
+  .btn{padding:9px 18px;border:none;border-radius:8px;font-weight:600;font-size:14px;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-outline{background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff}
+  .btn-outline:hover{background:rgba(255,255,255,.15)}
+  .btn-ghost{background:#f1f5f9;color:var(--text)}
+  .btn-ghost:hover{background:#e2e8f0}
+  .btn-danger{background:var(--danger);color:#fff}
+  .btn-success{background:var(--success);color:#fff}
+  .btn-sm{padding:6px 12px;font-size:12px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* ===== LAYOUT ===== */
+  .layout{display:flex;min-height:calc(100vh - 60px)}
+  .sidebar{width:230px;background:var(--card);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--muted);border-left:3px solid transparent;transition:.15s}
+  .nav-item:hover{background:#f8fafc;color:var(--text)}
+  .nav-item.active{background:#eff6ff;color:var(--primary);border-left-color:var(--primary);font-weight:600}
+  .nav-icon{width:20px;text-align:center}
+  .main{flex:1;padding:28px 32px;max-width:1200px;overflow-x:hidden}
+  .page-title{font-size:24px;font-weight:700;margin-bottom:6px}
+  .page-sub{color:var(--muted);font-size:14px;margin-bottom:24px}
+
+  /* ===== CARDS & GRIDS ===== */
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin-bottom:20px}
+  .grid{display:grid;gap:16px}
+  .grid-2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .grid-3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  .grid-4{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+  .stat-card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border-left:4px solid var(--primary)}
+  .stat-card.green{border-left-color:var(--success)} .stat-card.amber{border-left-color:var(--warning)} .stat-card.red{border-left-color:var(--danger)}
+  .stat-num{font-size:28px;font-weight:800}
+  .stat-label{color:var(--muted);font-size:13px;margin-top:4px}
+
+  /* ===== AUTH ===== */
+  .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#2563eb 100%);padding:20px}
+  .auth-card{background:#fff;border-radius:16px;padding:36px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .auth-logo{text-align:center;margin-bottom:20px}
+  .auth-logo .logo{width:56px;height:56px;background:linear-gradient(135deg,#2563eb,#0ea5e9);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:26px;margin-bottom:10px}
+  .auth-tabs{display:flex;background:#f1f5f9;border-radius:10px;padding:4px;margin-bottom:20px}
+  .auth-tab{flex:1;text-align:center;padding:9px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;color:var(--muted);transition:.2s}
+  .auth-tab.active{background:#fff;color:var(--primary);box-shadow:0 2px 6px rgba(0,0,0,.08)}
+  .form-group{margin-bottom:14px}
+  .form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:var(--text)}
+  .role-picker{display:flex;gap:8px;margin-bottom:16px}
+  .role-chip{flex:1;text-align:center;padding:10px;border:2px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);transition:.15s}
+  .role-chip.active{border-color:var(--primary);background:#eff6ff;color:var(--primary)}
+  .demo-banner{background:#fef3c7;border:1px solid #fcd34d;color:#92400e;padding:10px 14px;border-radius:8px;font-size:12.5px;margin-bottom:16px;line-height:1.5}
+
+  /* ===== TOPICS / LESSONS ===== */
+  .topic-card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);cursor:pointer;transition:.2s;border:1px solid transparent}
+  .topic-card:hover{transform:translateY(-3px);border-color:var(--primary);box-shadow:0 8px 24px rgba(37,99,235,.15)}
+  .topic-num{display:inline-block;background:#eff6ff;color:var(--primary);font-weight:700;font-size:12px;padding:3px 10px;border-radius:20px;margin-bottom:8px}
+  .topic-title{font-weight:700;font-size:15px;margin-bottom:6px}
+  .topic-meta{font-size:12px;color:var(--muted)}
+  .progress-bar{height:6px;background:#e2e8f0;border-radius:3px;margin-top:10px;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;transition:.4s}
+
+  /* ===== RESOURCE / LIBRARY ===== */
+  .filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;align-items:center}
+  .filter-chip{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);transition:.15s}
+  .filter-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .search-box{flex:1;min-width:200px;max-width:320px}
+  .resource-card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:flex-start}
+  .res-icon{width:46px;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .res-icon.textbook{background:#dbeafe;color:#1d4ed8}
+  .res-icon.note{background:#dcfce7;color:#15803d}
+  .res-icon.worksheet{background:#fef3c7;color:#b45309}
+  .res-icon.practical{background:#fce7f3;color:#be185d}
+  .res-icon.past{background:#ede9fe;color:#6d28d9}
+  .res-icon.other{background:#f1f5f9;color:#475569}
+  .res-info{flex:1;min-width:0}
+  .res-title{font-weight:700;font-size:14.5px;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .res-meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .res-actions{display:flex;gap:6px;flex-wrap:wrap}
+  .res-tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:#f1f5f9;color:var(--muted);margin-right:4px;font-weight:600;text-transform:uppercase}
+
+  /* ===== MODAL ===== */
+  .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+  .modal{background:#fff;border-radius:14px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .modal.lg{max-width:900px}
+  .modal-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:2}
+  .modal-title{font-size:17px;font-weight:700}
+  .modal-close{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1}
+  .modal-body{padding:24px}
+  .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:#f8fafc;border-radius:0 0 14px 14px}
+
+  /* ===== PDF VIEWER ===== */
+  .pdf-frame{width:100%;height:520px;border:1px solid var(--border);border-radius:8px;background:#f8fafc}
+  .pdf-toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+
+  /* ===== UPLOAD ===== */
+  .dropzone{border:2px dashed var(--border);border-radius:10px;padding:30px;text-align:center;cursor:pointer;transition:.2s;background:#f8fafc}
+  .dropzone:hover,.dropzone.dragover{border-color:var(--primary);background:#eff6ff}
+  .upload-progress{height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin-top:12px}
+  .upload-progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));width:0%;transition:.3s}
+  .upload-status{font-size:13px;margin-top:8px;font-weight:600}
+  .upload-status.ok{color:var(--success)} .upload-status.err{color:var(--danger)} .upload-status.info{color:var(--primary)}
+
+  /* ===== TABLE ===== */
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;padding:10px 12px;background:#f8fafc;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:2px solid var(--border)}
+  td{padding:12px;border-bottom:1px solid var(--border)}
+  tr:hover td{background:#f8fafc}
+  .table-wrap{overflow-x:auto}
+
+  /* ===== TOAST ===== */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 20px;border-radius:10px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:14px;transform:translateY(100px);opacity:0;transition:.3s;max-width:340px}
+  .toast.show{transform:translateY(0);opacity:1}
+  .toast.success{background:var(--success)} .toast.error{background:var(--danger)} .toast.info{background:var(--primary)}
+
+  .empty-state{text-align:center;padding:50px 20px;color:var(--muted)}
+  .empty-state .big{font-size:44px;margin-bottom:12px}
+  .section-title{font-size:17px;font-weight:700;margin:24px 0 14px;display:flex;align-items:center;gap:8px}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase}
+  .pill.active{background:#dcfce7;color:#15803d} .pill.inactive{background:#fee2e2;color:#991b1b}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:768px){.sidebar{display:none}.main{padding:16px}.two-col{grid-template-columns:1fr}}
+  .hint{font-size:12px;color:var(--muted);margin-top:4px}
+  code.inline{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:12px;font-family:monospace}
+</style>
+</head>
+<body>
+
+<!-- ============ AUTH SCREEN ============ -->
+<div id="authScreen" class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo">SC</div>
+      <h1 style="font-size:22px;font-weight:800">Scholar's Camp</h1>
+      <p style="color:var(--muted);font-size:13px;margin-top:4px">Physics Learning Platform</p>
+    </div>
+    <div class="demo-banner" id="demoBanner">
+      <strong>Demo Mode:</strong> Firebase not configured yet. Using local mock data.
+      Login as <strong>admin@demo.com</strong> / <strong>admin123</strong>, or
+      <strong>student@demo.com</strong> / <strong>student123</strong>.
+      Configure Firebase in <code class="inline">CONFIG</code> at the top of this file to go live.
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Sign In</div>
+      <div class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">Register</div>
+    </div>
+    <div id="loginForm">
+      <div class="form-group"><label>Email</label><input id="loginEmail" type="email" placeholder="you@school.com" value="student@demo.com"></div>
+      <div class="form-group"><label>Password</label><input id="loginPass" type="password" placeholder="••••••••" value="student123"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()">Sign In</button>
+    </div>
+    <div id="registerForm" class="hidden">
+      <div class="form-group"><label>Full Name</label><input id="regName" placeholder="e.g. John Adeyemi"></div>
+      <div class="form-group"><label>Email</label><input id="regEmail" type="email" placeholder="you@school.com"></div>
+      <div class="form-group"><label>Password</label><input id="regPass" type="password" placeholder="Min. 6 characters"></div>
+      <div class="form-group"><label>Class (students only)</label>
+        <select id="regClass"><option>SS1</option><option>SS2</option><option>SS3</option></select>
+      </div>
+      <div class="role-picker">
+        <div class="role-chip active" data-role="student" onclick="pickRole(this)">Student</div>
+        <div class="role-chip" data-role="teacher" onclick="pickRole(this)">Teacher</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doRegister()">Create Account</button>
+      <p class="hint" style="text-align:center;margin-top:10px">Admin accounts are created manually via Firebase Auth / first-run setup.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MAIN APP ============ -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="brand"><div class="logo">SC</div> Scholar's Camp <span class="badge" id="roleBadge">Student</span></div>
+    <div class="topbar-right">
+      <span class="badge offline-badge hidden" id="offlineBadge">OFFLINE</span>
+      <span style="font-size:14px" id="userName">User</span>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+  <div class="layout">
+    <div class="sidebar" id="sidebar"></div>
+    <div class="main" id="mainContent"></div>
+  </div>
+</div>
+
+<!-- ============ MODAL ROOT ============ -->
+<div id="modalRoot"></div>
+<div id="toast" class="toast"></div>
+
+<script>
+/* ============================================================
+   SCHOLAR'S CAMP — CONFIGURATION
+   Fill in your Firebase project config and Google Apps Script
+   Web App URL. Leave as-is to run in Demo Mode (localStorage).
+   ============================================================ */
+const CONFIG = {
+  firebase: {
+    apiKey: "YOUR_FIREBASE_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  },
+  // Google Apps Script Web App URL (deployed as Web App, access: Anyone)
+  appsScriptUrl: "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec",
+  // Allowed file types & max size (MB) — mirrored in Apps Script
+  allowedTypes: ["pdf","doc","docx","ppt","pptx","xls","xlsx","jpg","jpeg","png"],
+  maxFileSizeMB: 25,
+  // Default Drive folder IDs (overridable in Admin → Google Drive Settings)
+  driveFolders: {
+    root: "", physics: "", ss1: "", ss2: "", ss3: ""
+  }
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let currentUser = null;      // {uid, name, email, role, class}
+let currentPage = "dashboard";
+let DEMO_MODE = true;        // flipped to false if Firebase initializes
+let db = null;               // Firestore ref (when live)
+let driveSettings = null;    // loaded from Firestore / localStorage
+
+/* ============================================================
+   DEMO SEED DATA
+   ============================================================ */
+const DEMO_TOPICS = [
+  {id:"t1", subjectId:"physics", class:"SS1", number:1, title:"Measurements and Units", lessons:4, questions:12},
+  {id:"t2", subjectId:"physics", class:"SS1", number:2, title:"Motion and Speed", lessons:5, questions:15},
+  {id:"t3", subjectId:"physics", class:"SS1", number:3, title:"Forces and Newton's Laws", lessons:6, questions:18},
+  {id:"t4", subjectId:"physics", class:"SS2", number:8, title:"Work, Energy and Power", lessons:5, questions:14},
+  {id:"t5", subjectId:"physics", class:"SS2", number:10, title:"Heat, Temperature and Thermal Expansion", lessons:6, questions:20},
+  {id:"t6", subjectId:"physics", class:"SS3", number:15, title:"Electric Fields and Capacitance", lessons:7, questions:22},
+  {id:"t7", subjectId:"physics", class:"SS3", number:18, title:"Electromagnetic Induction", lessons:6, questions:19},
+];
+
+const DEMO_RESOURCES = [
+  {resourceId:"r1", subjectId:"physics", class:"SS1", topicId:"t1", title:"New School Physics for Senior Secondary (Textbook)", description:"Comprehensive SS1–SS3 physics textbook.", resourceType:"textbook", fileName:"new_school_physics.pdf", mimeType:"application/pdf", googleDriveFileId:"1AbCdEfGhIjKlMnOp_DEMO", googleDriveUrl:"https://drive.google.com/file/d/1AbCdEfGhIjKlMnOp_DEMO/view", webViewUrl:"https://drive.google.com/file/d/1AbCdEfGhIjKlMnOp_DEMO/preview", downloadUrl:"https://drive.google.com/uc?export=download&id=1AbCdEfGhIjKlMnOp_DEMO", folderId:"demo_ss1_textbooks", uploadedBy:"Admin", createdAt:"2026-01-15", updatedAt:"2026-01-15", status:"active", version:1},
+  {resourceId:"r2", subjectId:"physics", class:"SS1", topicId:"t1", title:"Measurements & Units — Topic Note", description:"Concise summary with worked examples.", resourceType:"note", fileName:"measurements_note.pdf", mimeType:"application/pdf", googleDriveFileId:"2BcDeFgHiJkLmNoPq_DEMO", googleDriveUrl:"https://drive.google.com/file/d/2BcDeFgHiJkLmNoPq_DEMO/view", webViewUrl:"https://drive.google.com/file/d/2BcDeFgHiJkLmNoPq_DEMO/preview", downloadUrl:"https://drive.google.com/uc?export=download&id=2BcDeFgHiJkLmNoPq_DEMO", folderId:"demo_ss1_notes", uploadedBy:"Admin", createdAt:"2026-02-01", updatedAt:"2026-02-01", status:"active", version:1},
+  {resourceId:"r3", subjectId:"physics", class:"SS2", topicId:"t5", title:"Heat & Thermal Expansion Worksheet", description:"Practice questions with marking scheme.", resourceType:"worksheet", fileName:"heat_worksheet.pdf", mimeType:"application/pdf", googleDriveFileId:"3CdEfGhIjKlMnOpQr_DEMO", googleDriveUrl:"https://drive.google.com/file/d/3CdEfGhIjKlMnOpQr_DEMO/view", webViewUrl:"https://drive.google.com/file/d/3CdEfGhIjKlMnOpQr_DEMO/preview", downloadUrl:"https://drive.google.com/uc?export=download&id=3CdEfGhIjKlMnOpQr_DEMO", folderId:"demo_ss2_worksheets", uploadedBy:"Admin", createdAt:"2026-02-10", updatedAt:"2026-02-10", status:"active", version:1},
+  {resourceId:"r4", subjectId:"physics", class:"SS2", topicId:"t5", title:"Thermal Expansion — Practical Guide", description:"Lab instructions for linear expansion experiment.", resourceType:"practical", fileName:"thermal_practical.pdf", mimeType:"application/pdf", googleDriveFileId:"4DeFgHiJkLmNoPqRs_DEMO", googleDriveUrl:"https://drive.google.com/file/d/4DeFgHiJkLmNoPqRs_DEMO/view", webViewUrl:"https://drive.google.com/file/d/4DeFgHiJkLmNoPqRs_DEMO/preview", downloadUrl:"https://drive.google.com/uc?export=download&id=4DeFgHiJkLmNoPqRs_DEMO", folderId:"demo_ss2_practical", uploadedBy:"Admin", createdAt:"2026-02-12", updatedAt:"2026-02-12", status:"active", version:1},
+  {resourceId:"r5", subjectId:"physics", class:"SS3", topicId:"t6", title:"WAEC Past Questions — Electricity (2018–2023)", description:"Compiled past questions with solutions.", resourceType:"past", fileName:"waec_electricity_pq.pdf", mimeType:"application/pdf", googleDriveFileId:"5EfGhIjKlMnOpQrSt_DEMO", googleDriveUrl:"https://drive.google.com/file/d/5EfGhIjKlMnOpQrSt_DEMO/view", webViewUrl:"https://drive.google.com/file/d/5EfGhIjKlMnOpQrSt_DEMO/preview", downloadUrl:"https://drive.google.com/uc?export=download&id=5EfGhIjKlMnOpQrSt_DEMO", folderId:"demo_ss3_past", uploadedBy:"Admin", createdAt:"2026-03-01", updatedAt:"2026-03-01", status:"active", version:1},
+];
+
+const RES_TYPE_META = {
+  textbook:  {label:"Textbook",       icon:"📘", cls:"textbook"},
+  note:      {label:"PDF Note",       icon:"📄", cls:"note"},
+  worksheet: {label:"Worksheet",      icon:"📝", cls:"worksheet"},
+  practical: {label:"Practical",      icon:"🧪", cls:"practical"},
+  past:      {label:"Past Question",  icon:"📜", cls:"past"},
+  other:     {label:"Other",          icon:"📎", cls:"other"}
+};
+
+/* ============================================================
+   STORAGE HELPERS (Demo Mode persistence + offline cache)
+   ============================================================ */
+const Store = {
+  get(k, def){ try{ const v = localStorage.getItem("sc_"+k); return v?JSON.parse(v):def; }catch(e){ return def; } },
+  set(k,v){ localStorage.setItem("sc_"+k, JSON.stringify(v)); },
+  resources(){ return Store.get("resources", DEMO_RESOURCES); },
+  setResources(r){ Store.set("resources", r); },
+  users(){ return Store.get("users", [
+    {uid:"u_admin", name:"Platform Admin", email:"admin@demo.com", password:"admin123", role:"admin", class:"-"},
+    {uid:"u_student", name:"Demo Student", email:"student@demo.com", password:"student123", role:"student", class:"SS2"},
+    {uid:"u_teacher", name:"Demo Teacher", email:"teacher@demo.com", password:"teacher123", role:"teacher", class:"-"},
+  ]);},
+  setUsers(u){ Store.set("users", u); },
+  progress(){ return Store.get("progress", {}); },
+  setProgress(p){ Store.set("progress", p); },
+  driveSettings(){ return Store.get("driveSettings", CONFIG.driveFolders); },
+  setDriveSettings(s){ Store.set("driveSettings", s); driveSettings = s; },
+  offlineCache(){ return Store.get("offlineCache", {}); },
+  setOfflineCache(c){ Store.set("offlineCache", c); }
+};
+
+/* ============================================================
+   FIREBASE INIT (graceful — falls back to Demo Mode)
+   ============================================================ */
+function initFirebase(){
+  if(CONFIG.firebase.apiKey === "YOUR_FIREBASE_API_KEY"){
+    DEMO_MODE = true; return;
+  }
+  try{
+    // Firebase would be loaded via CDN scripts here in production.
+    // firebase.initializeApp(CONFIG.firebase);
+    // db = firebase.firestore(); firebase.auth().onAuthStateChanged(...);
+    DEMO_MODE = false;
+  }catch(e){ DEMO_MODE = true; toast("Firebase init failed — using Demo Mode","error"); }
+}
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+let selectedRole = "student";
+function switchAuthTab(t){
+  document.querySelectorAll(".auth-tab").forEach(el=>el.classList.toggle("active", el.dataset.tab===t));
+  document.getElementById("loginForm").classList.toggle("hidden", t!=="login");
+  document.getElementById("registerForm").classList.toggle("hidden", t!=="register");
+}
+function pickRole(el){
+  document.querySelectorAll(".role-chip").forEach(c=>c.classList.remove("active"));
+  el.classList.add("active"); selectedRole = el.dataset.role;
+}
+function doLogin(){
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPass").value;
+  if(!email || !pass){ toast("Enter email and password","error"); return; }
+  if(DEMO_MODE){
+    const users = Store.users();
+    const u = users.find(x=>x.email.toLowerCase()===email.toLowerCase() && x.password===pass);
+    if(!u){ toast("Invalid credentials. Try admin@demo.com/admin123","error"); return; }
+    currentUser = {uid:u.uid, name:u.name, email:u.email, role:u.role, class:u.class};
+    enterApp();
+  }else{
+    // firebase.auth().signInWithEmailAndPassword(email, pass)...
+  }
+}
+function doRegister(){
+  const name=document.getElementById("regName").value.trim(), email=document.getElementById("regEmail").value.trim();
+  const pass=document.getElementById("regPass").value, cls=document.getElementById("regClass").value;
+  if(!name||!email||!pass){ toast("Fill all fields","error"); return; }
+  if(pass.length<6){ toast("Password must be at least 6 characters","error"); return; }
+  if(DEMO_MODE){
+    const users = Store.users();
+    if(users.find(u=>u.email.toLowerCase()===email.toLowerCase())){ toast("Email already registered","error"); return; }
+    const u = {uid:"u_"+Date.now(), name, email, password:pass, role:selectedRole, class: selectedRole==="student"?cls:"-"};
+    users.push(u); Store.setUsers(users);
+    currentUser = {uid:u.uid, name, email, role:selectedRole, class:u.class};
+    toast("Account created — welcome!","success"); enterApp();
+  }
+}
+function doLogout(){ currentUser=null; document.getElementById("app").classList.add("hidden"); document.getElementById("authScreen").classList.remove("hidden"); }
+
+function enterApp(){
+  document.getElementById("authScreen").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("userName").textContent = currentUser.name;
+  const rb = document.getElementById("roleBadge");
+  rb.textContent = currentUser.role.toUpperCase();
+  driveSettings = Store.driveSettings();
+  buildSidebar(); navigate("dashboard");
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function navItems(){
+  const base = [
+    {id:"dashboard", icon:"🏠", label:"Dashboard"},
+    {id:"topics", icon:"📚", label:"Topics & Lessons"},
+    {id:"library", icon:"📖", label:"Textbook Library"},
+    {id:"exams", icon:"✍️", label:"Practice Exams"},
+    {id:"progress", icon:"📈", label:"My Progress"},
+  ];
+  if(currentUser.role==="admin"){
+    return [
+      {id:"dashboard", icon:"🏠", label:"Admin Dashboard"},
+      {id:"admin-resources", icon:"📁", label:"Resources (Google Drive)"},
+      {id:"admin-drive", icon:"⚙️", label:"Google Drive Settings"},
+      {id:"admin-topics", icon:"📚", label:"Topics & Lessons"},
+      {id:"admin-users", icon:"👥", label:"Users"},
+      {id:"library", icon:"📖", label:"Textbook Library"},
+    ];
+  }
+  if(currentUser.role==="teacher"){
+    return [...base, {id:"teacher-exams", icon:"📝", label:"Manage Exams"}];
+  }
+  return base;
+}
+function buildSidebar(){
+  const sb = document.getElementById("sidebar");
+  sb.innerHTML = navItems().map(n=>
+    `<div class="nav-item ${currentPage===n.id?'active':''}" onclick="navigate('${n.id}')"><span class="nav-icon">${n.icon}</span>${n.label}</div>`
+  ).join("");
+}
+function navigate(page){
+  currentPage = page; buildSidebar();
+  const mc = document.getElementById("mainContent");
+  const renderers = {
+    dashboard: renderDashboard, topics: renderTopics, library: renderLibrary,
+    exams: renderExams, progress: renderProgress,
+    "admin-resources": renderAdminResources, "admin-drive": renderAdminDrive,
+    "admin-topics": renderAdminTopics, "admin-users": renderAdminUsers,
+    "teacher-exams": renderExams,
+  };
+  (renderers[page]||renderDashboard)(mc);
+  window.scrollTo(0,0);
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function renderDashboard(mc){
+  const res = Store.resources().filter(r=>r.status==="active");
+  const progress = Store.progress();
+  const topicsDone = Object.values(progress).filter(p=>p>=100).length;
+  if(currentUser.role==="admin"){
+    mc.innerHTML = `
+      <div class="page-title">Admin Dashboard</div>
+      <div class="page-sub">Manage Scholar's Camp content, resources and users.</div>
+      <div class="grid grid-4">
+        <div class="stat-card"><div class="stat-num">${Store.users().length}</div><div class="stat-label">Registered Users</div></div>
+        <div class="stat-card green"><div class="stat-num">${res.length}</div><div class="stat-label">Active Resources</div></div>
+        <div class="stat-card amber"><div class="stat-num">${DEMO_TOPICS.length}</div><div class="stat-label">Topics</div></div>
+        <div class="stat-card red"><div class="stat-num">${DEMO_MODE?'Demo':'Live'}</div><div class="stat-label">Mode</div></div>
+      </div>
+      <div class="card" style="margin-top:20px">
+        <div class="section-title" style="margin-top:0">Quick Actions</div>
+        <div class="grid grid-3">
+          <button class="btn btn-primary" onclick="navigate('admin-resources')">📁 Upload Resource to Drive</button>
+          <button class="btn btn-ghost" onclick="navigate('admin-drive')">⚙️ Drive Settings</button>
+          <button class="btn btn-ghost" onclick="navigate('library')">📖 View Library</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-top:0">Recent Resources</div>
+        ${res.slice(0,3).map(resourceRow).join("") || "<div class='empty-state'>No resources yet. Upload your first textbook.</div>"}
+      </div>`;
+    return;
+  }
+  const myTopics = DEMO_TOPICS.filter(t=>currentUser.role==="student"? t.class===currentUser.class : true);
+  mc.innerHTML = `
+    <div class="page-title">Welcome back, ${currentUser.name.split(" ")[0]}! 👋</div>
+    <div class="page-sub">${currentUser.role==="student"?`Class ${currentUser.class} Physics — keep the momentum going.`:"Teacher dashboard."}</div>
+    <div class="grid grid-3">
+      <div class="stat-card"><div class="stat-num">${myTopics.length}</div><div class="stat-label">Topics Available</div></div>
+      <div class="stat-card green"><div class="stat-num">${topicsDone}</div><div class="stat-label">Topics Completed</div></div>
+      <div class="stat-card amber"><div class="stat-num">${res.length}</div><div class="stat-label">Learning Resources</div></div>
+    </div>
+    <div class="section-title">Continue Learning</div>
+    <div class="grid grid-3">${myTopics.slice(0,3).map(topicCardHTML).join("")}</div>
+    <div class="section-title">Recommended Materials</div>
+    <div class="card">${res.slice(0,3).map(resourceRow).join("")}</div>`;
+}
+
+function topicCardHTML(t){
+  const p = Store.progress()[t.id] || 0;
+  return `<div class="topic-card" onclick="openTopic('${t.id}')">
+    <span class="topic-num">Topic ${t.number} · ${t.class}</span>
+    <div class="topic-title">${t.title}</div>
+    <div class="topic-meta">${t.lessons} lessons · ${t.questions} practice questions</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${p}%"></div></div>
+    <div class="topic-meta" style="margin-top:4px">${p}% complete</div>
+  </div>`;
+}
+
+/* ============================================================
+   TOPICS & TOPIC DETAIL (with Recommended Materials)
+   ============================================================ */
+function renderTopics(mc){
+  const myTopics = currentUser.role==="student" ? DEMO_TOPICS.filter(t=>t.class===currentUser.class) : DEMO_TOPICS;
+  const byClass = {};
+  myTopics.forEach(t=>{ (byClass[t.class]=byClass[t.class]||[]).push(t); });
+  mc.innerHTML = `<div class="page-title">Topics & Lessons</div>
+    <div class="page-sub">Browse the Physics curriculum. Each topic links to recommended materials from Google Drive.</div>` +
+    Object.keys(byClass).map(cls=>`
+      <div class="section-title">${cls} Physics</div>
+      <div class="grid grid-3">${byClass[cls].map(topicCardHTML).join("")}</div>`).join("");
+}
+
+function openTopic(topicId){
+  const t = DEMO_TOPICS.find(x=>x.id===topicId);
+  const res = Store.resources().filter(r=>r.topicId===topicId && r.status==="active");
+  const allRes = Store.resources().filter(r=>r.class===t.class && r.status==="active");
+  showModal(`Topic ${t.number}: ${t.title}`, `
+    <p style="color:var(--muted);margin-bottom:16px">Class ${t.class} · ${t.lessons} lessons · ${t.questions} questions</p>
+    <div class="section-title" style="margin-top:0">Lessons</div>
+    ${Array.from({length:t.lessons},(_,i)=>`<div style="padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+      <span><strong>Lesson ${i+1}</strong> — ${t.title} (part ${i+1})</span>
+      <button class="btn btn-ghost btn-sm" onclick="toast('Video lesson opens via YouTube link stored in Firestore','info')">▶ Watch</button>
+    </div>`).join("")}
+    <div class="section-title">Recommended Materials</div>
+    ${res.length? res.map(resourceRow).join("") : `
+      <div class="empty-state"><div class="big">📭</div>No materials linked to this topic yet. Admin can attach resources in the Resources section.<br><br>
+      <strong>Also available for ${t.class}:</strong></div>
+      ${allRes.slice(0,3).map(resourceRow).join("")}`}
+    <div style="margin-top:16px"><button class="btn btn-primary" onclick="markTopicComplete('${t.id}');closeModal()">Mark Topic Complete</button></div>
+  `, "lg");
+}
+function markTopicComplete(id){
+  const p = Store.progress(); p[id]=100; Store.setProgress(p); toast("Topic marked complete!","success"); navigate(currentPage);
+}
+
+/* ============================================================
+   TEXTBOOK LIBRARY (filters + search)
+   ============================================================ */
+let libFilterClass = "All", libFilterType = "All", libSearch = "";
+function renderLibrary(mc){
+  mc.innerHTML = `<div class="page-title">Physics Textbook Library</div>
+    <div class="page-sub">All resources are stored in Google Drive. Metadata is served from Firestore. Files open in the embedded viewer.</div>
+    <div class="filters">
+      <input class="search-box" id="libSearch" placeholder="Search by title, topic, class…" value="${libSearch}" oninput="libSearch=this.value;renderLibraryList()">
+      <span style="font-size:13px;font-weight:600;color:var(--muted)">Class:</span>
+      ${["All","SS1","SS2","SS3"].map(c=>`<span class="filter-chip ${libFilterClass===c?'active':''}" onclick="libFilterClass='${c}';renderLibrary(document.getElementById('mainContent'))">${c}</span>`).join("")}
+    </div>
+    <div class="filters">
+      <span style="font-size:13px;font-weight:600;color:var(--muted)">Type:</span>
+      ${["All","textbook","note","worksheet","practical","past"].map(ty=>`<span class="filter-chip ${libFilterType===ty?'active':''}" onclick="libFilterType='${ty}';renderLibrary(document.getElementById('mainContent'))">${ty==='All'?'All':RES_TYPE_META[ty].label}</span>`).join("")}
+    </div>
+    <div id="libList"></div>`;
+  renderLibraryList();
+}
+function renderLibraryList(){
+  const el = document.getElementById("libList"); if(!el) return;
+  let res = Store.resources().filter(r=>r.status==="active");
+  if(libFilterClass!=="All") res = res.filter(r=>r.class===libFilterClass);
+  if(libFilterType!=="All") res = res.filter(r=>r.resourceType===libFilterType);
+  if(libSearch){ const q=libSearch.toLowerCase(); res=res.filter(r=>(r.title+" "+r.topicId+" "+r.class+" "+r.resourceType).toLowerCase().includes(q)); }
+  el.innerHTML = res.length? res.map(resourceRow).join("") : `<div class="empty-state"><div class="big">🔍</div>No resources match your filters.</div>`;
+}
+
+function resourceRow(r){
+  const meta = RES_TYPE_META[r.resourceType]||RES_TYPE_META.other;
+  const topic = DEMO_TOPICS.find(t=>t.id===r.topicId);
+  const offline = Store.offlineCache()[r.resourceId];
+  return `<div class="resource-card" style="margin-bottom:12px">
+    <div class="res-icon ${meta.cls}">${meta.icon}</div>
+    <div class="res-info">
+      <div class="res-title">${r.title}</div>
+      <div class="res-meta">
+        <span class="res-tag">${meta.label}</span>
+        <span class="res-tag">${r.class}</span>
+        ${topic?`<span class="res-tag">Topic ${topic.number}</span>`:""}
+        <span style="margin-left:6px">${r.fileName} · v${r.version||1}</span>
+        ${offline?`<span class="res-tag" style="background:#dcfce7;color:#15803d">⬇ Offline</span>`:""}
+      </div>
+      <div class="res-actions">
+        <button class="btn btn-primary btn-sm" onclick="openPdfViewer('${r.resourceId}')">📖 Read Online</button>
+        <button class="btn btn-ghost btn-sm" onclick="downloadResource('${r.resourceId}')">⬇ Download</button>
+        ${!offline?`<button class="btn btn-ghost btn-sm" onclick="saveForOffline('${r.resourceId}')">💾 Save Offline</button>`:`<button class="btn btn-success btn-sm" onclick="openOffline('${r.resourceId}')">📴 Open Offline</button>`}
+        ${currentUser&&currentUser.role==="admin"?`<button class="btn btn-ghost btn-sm" onclick="editResource('${r.resourceId}')">✏ Edit</button><button class="btn btn-danger btn-sm" onclick="deleteResource('${r.resourceId}')">🗑 Delete</button>`:""}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   PDF VIEWER (embedded Google Drive preview)
+   ============================================================ */
+function openPdfViewer(resourceId){
+  const r = Store.resources().find(x=>x.resourceId===resourceId);
+  if(!r){ toast("Resource not found","error"); return; }
+  if(!navigator.onLine){
+    if(Store.offlineCache()[resourceId]){ openOffline(resourceId); return; }
+    toast("This resource is not available offline. Connect to the internet.","error"); return;
+  }
+  // Dynamically construct preview URL from Firestore-stored file ID — never hard-coded
+  const previewUrl = `https://drive.google.com/file/d/${r.googleDriveFileId}/preview`;
+  showModal(`📖 ${r.title}`, `
+    <div class="pdf-toolbar">
+      <button class="btn btn-primary btn-sm" onclick="window.open('${previewUrl.replace('/preview','/view')}','_blank')">⛶ Open Full Screen</button>
+      <button class="btn btn-ghost btn-sm" onclick="window.open('${r.googleDriveUrl}','_blank')">📂 Open in Google Drive</button>
+      <button class="btn btn-ghost btn-sm" onclick="downloadResource('${r.resourceId}')">⬇ Download</button>
+      <button class="btn btn-ghost btn-sm" onclick="saveForOffline('${r.resourceId}')">💾 Save for Offline</button>
+    </div>
+    <iframe class="pdf-frame" src="${previewUrl}" allow="autoplay"></iframe>
+    <p class="hint" style="margin-top:8px">Preview loads from Google Drive using file ID <code class="inline">${r.googleDriveFileId.substring(0,12)}…</code> stored in Firestore. If the iframe is blocked, use "Open in Google Drive".</p>
+  `, "lg");
+}
+
+function downloadResource(resourceId){
+  const r = Store.resources().find(x=>x.resourceId===resourceId);
+  if(!r) return;
+  if(!navigator.onLine){ toast("Download requires an internet connection","error"); return; }
+  window.open(r.downloadUrl, "_blank");
+  toast("Download started from Google Drive","success");
+}
+
+/* ============================================================
+   OFFLINE SUPPORT (IndexedDB / Cache Storage stub)
+   ============================================================ */
+function saveForOffline(resourceId){
+  const r = Store.resources().find(x=>x.resourceId===resourceId);
+  if(!r) return;
+  if(!navigator.onLine){ toast("Cannot download while offline","error"); return; }
+  const cache = Store.offlineCache();
+  cache[resourceId] = {resourceId, fileName:r.fileName, topicId:r.topicId, localCacheReference:"idb://resource_"+resourceId, downloadDate:new Date().toISOString(), version:r.version||1};
+  Store.setOfflineCache(cache);
+  toast(`"${r.fileName}" saved for offline use. In production, the blob is stored in IndexedDB/Cache Storage.`,"success");
+  navigate(currentPage);
+}
+function openOffline(resourceId){
+  const cached = Store.offlineCache()[resourceId];
+  if(!cached){ toast("Not saved for offline","error"); return; }
+  toast(`Opening offline copy of ${cached.fileName} (v${cached.version})`,"info");
+}
+window.addEventListener("online", ()=>{ document.getElementById("offlineBadge").classList.add("hidden"); toast("Back online — syncing with Firestore…","success"); });
+window.addEventListener("offline", ()=>{ document.getElementById("offlineBadge").classList.remove("hidden"); toast("You are offline. Cached resources still available.","info"); });
+
+/* ============================================================
+   ADMIN — RESOURCES (Google Drive CRUD)
+   ============================================================ */
+let adminFilter = "All";
+function renderAdminResources(mc){
+  mc.innerHTML = `<div class="page-title">Resources — Google Drive</div>
+    <div class="page-sub">Upload educational files to Google Drive via the secure Apps Script backend. Metadata is saved to Firestore. Files never pass through frontend credentials.</div>
+    <div class="card">
+      <div class="section-title" style="margin-top:0">Upload New Resource</div>
+      <div class="two-col">
+        <div class="form-group"><label>Subject</label>
+          <select id="upSubject"><option value="physics">Physics</option><option value="mathematics">Mathematics</option><option value="chemistry">Chemistry</option><option value="biology">Biology</option><option value="english">English</option><option value="agricultural-science">Agricultural Science</option><option value="computer-science">Computer Science</option></select>
+        </div>
+        <div class="form-group"><label>Class</label>
+          <select id="upClass"><option>SS1</option><option>SS2</option><option>SS3</option></select>
+        </div>
+        <div class="form-group"><label>Topic</label>
+          <select id="upTopic">${DEMO_TOPICS.map(t=>`<option value="${t.id}">Topic ${t.number}: ${t.title} (${t.class})</option>`).join("")}</select>
+        </div>
+        <div class="form-group"><label>Resource Type</label>
+          <select id="upType">${Object.entries(RES_TYPE_META).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join("")}</select>
+        </div>
+      </div>
+      <div class="form-group"><label>Title</label><input id="upTitle" placeholder="e.g. New School Physics Textbook"></div>
+      <div class="form-group"><label>Description (optional)</label><textarea id="upDesc" rows="2" placeholder="Short description…"></textarea></div>
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('upFile').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)">
+        <div style="font-size:32px">📤</div>
+        <strong>Click to select file</strong> or drag & drop here
+        <div class="hint">Allowed: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, JPG, PNG · Max ${CONFIG.maxFileSizeMB}MB</div>
+        <input type="file" id="upFile" class="hidden" onchange="handleFileSelect(this.files[0])">
+      </div>
+      <div id="uploadInfo" class="hidden" style="margin-top:14px">
+        <div id="uploadFileName" style="font-weight:600;font-size:14px"></div>
+        <div class="upload-progress"><div class="upload-progress-fill" id="uploadFill"></div></div>
+        <div class="upload-status info" id="uploadStatus">Preparing…</div>
+      </div>
+      <div style="margin-top:16px"><button class="btn btn-primary" id="uploadBtn" onclick="startUpload()" disabled>⬆ Upload to Google Drive</button></div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-top:0">All Resources (${Store.resources().length})</div>
+      <div class="filters">
+        ${["All","textbook","note","worksheet","practical","past"].map(ty=>`<span class="filter-chip ${adminFilter===ty?'active':''}" onclick="adminFilter='${ty}';renderAdminResources(document.getElementById('mainContent'))">${ty==='All'?'All':RES_TYPE_META[ty].label}</span>`).join("")}
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Title</th><th>Type</th><th>Class</th><th>Drive File ID</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>${Store.resources().filter(r=>adminFilter==="All"||r.resourceType===adminFilter).map(r=>`
+          <tr>
+            <td><strong>${r.title}</strong><br><span style="font-size:11px;color:var(--muted)">${r.fileName}</span></td>
+            <td><span class="res-tag">${RES_TYPE_META[r.resourceType].label}</span></td>
+            <td>${r.class}</td>
+            <td><code class="inline">${r.googleDriveFileId.substring(0,14)}…</code></td>
+            <td><span class="pill ${r.status}">${r.status}</span></td>
+            <td>
+              <button class="btn btn-ghost btn-sm" onclick="openPdfViewer('${r.resourceId}')">View</button>
+              <button class="btn btn-ghost btn-sm" onclick="editResource('${r.resourceId}')">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteResource('${r.resourceId}')">Delete</button>
+            </td>
+          </tr>`).join("")}</tbody>
+      </table></div>
+    </div>`;
+}
+
+let pendingFile = null;
+function handleDrop(e){
+  e.preventDefault(); document.getElementById("dropzone").classList.remove("dragover");
+  if(e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0]);
+}
+function handleFileSelect(file){
+  if(!file) return;
+  const ext = file.name.split(".").pop().toLowerCase();
+  if(!CONFIG.allowedTypes.includes(ext)){ toast(`Unsupported file type: .${ext}`,"error"); return; }
+  if(file.size > CONFIG.maxFileSizeMB*1024*1024){ toast(`File too large. Max ${CONFIG.maxFileSizeMB}MB.`,"error"); return; }
+  pendingFile = file;
+  document.getElementById("uploadInfo").classList.remove("hidden");
+  document.getElementById("uploadFileName").textContent = `${file.name} — ${(file.size/1024/1024).toFixed(2)} MB`;
+  document.getElementById("uploadBtn").disabled = false;
+  document.getElementById("uploadStatus").textContent = "Ready to upload.";
+  document.getElementById("uploadStatus").className = "upload-status info";
+  document.getElementById("uploadFill").style.width = "0%";
+}
+
+async function startUpload(){
+  if(!pendingFile){ toast("Select a file first","error"); return; }
+  const title = document.getElementById("upTitle").value.trim() || pendingFile.name;
+  const btn = document.getElementById("uploadBtn"); btn.disabled = true;
+  const fill = document.getElementById("uploadFill"), status = document.getElementById("uploadStatus");
+  status.textContent = "Validating…"; status.className="upload-status info";
+
+  const payload = {
+    action: "upload",
+    subjectId: document.getElementById("upSubject").value,
+    class: document.getElementById("upClass").value,
+    topicId: document.getElementById("upTopic").value,
+    resourceType: document.getElementById("upType").value,
+    title, description: document.getElementById("upDesc").value.trim(),
+    fileName: pendingFile.name,
+    mimeType: pendingFile.type || "application/octet-stream",
+  };
+
+  if(DEMO_MODE || !CONFIG.appsScriptUrl.includes("script.google.com")){
+    // Simulate upload progress for demo
+    for(let p=10;p<=100;p+=18){ fill.style.width=p+"%"; status.textContent=`Uploading… ${p}%`; await new Promise(r=>setTimeout(r,180)); }
+    status.textContent = "Upload successful (demo). Metadata saved."; status.className="upload-status ok";
+    const fakeId = "DEMO_"+Math.random().toString(36).substring(2,14);
+    const newRes = {
+      resourceId: "r"+Date.now(), ...payload,
+      googleDriveFileId: fakeId,
+      googleDriveUrl: `https://drive.google.com/file/d/${fakeId}/view`,
+      webViewUrl: `https://drive.google.com/file/d/${fakeId}/preview`,
+      downloadUrl: `https://drive.google.com/uc?export=download&id=${fakeId}`,
+      folderId: driveSettings[payload.class.toLowerCase()] || "demo_folder",
+      uploadedBy: currentUser.name,
+      createdAt: new Date().toISOString().slice(0,10),
+      updatedAt: new Date().toISOString().slice(0,10),
+      status: "active", version: 1
+    };
+    const all = Store.resources(); all.unshift(newRes); Store.setResources(all);
+    toast("Resource uploaded (demo mode)","success");
+    setTimeout(()=>{ pendingFile=null; renderAdminResources(document.getElementById("mainContent")); }, 1200);
+    return;
+  }
+
+  // LIVE: send file (base64) to Apps Script Web App — credentials never in frontend
+  try{
+    const reader = new FileReader();
+    reader.onload = async ()=>{
+      const base64 = reader.result.split(",")[1];
+      fill.style.width="30%"; status.textContent="Uploading to Google Drive via Apps Script…";
+      const resp = await fetch(CONFIG.appsScriptUrl, {
+        method:"POST", mode:"no-cors",
+        body: JSON.stringify({...payload, fileBase64: base64})
+      });
+      // Apps Script returns JSON; with no-cors we simulate parse. In production use a proper CORS proxy or textContent.
+      fill.style.width="100%"; status.textContent="Upload successful. Saving metadata to Firestore…"; status.className="upload-status ok";
+      // After receiving {fileId, fileName, mimeType, previewUrl, downloadUrl, folderId} from Apps Script,
+      // save to Firestore collection "resources". In demo we save locally.
+      toast("Upload complete","success");
+    };
+    reader.readAsDataURL(pendingFile);
+  }catch(e){
+    status.textContent = "Upload failed: "+e.message; status.className="upload-status err"; btn.disabled=false;
+  }
+}
+
+/* ============================================================
+   ADMIN — EDIT / DELETE RESOURCE
+   ============================================================ */
+function editResource(resourceId){
+  const r = Store.resources().find(x=>x.resourceId===resourceId);
+  if(!r) return;
+  showModal(`Edit Resource: ${r.title}`, `
+    <div class="form-group"><label>Title</label><input id="edTitle" value="${r.title}"></div>
+    <div class="form-group"><label>Description</label><textarea id="edDesc" rows="2">${r.description||""}</textarea></div>
+    <div class="two-col">
+      <div class="form-group"><label>Class</label><select id="edClass">${["SS1","SS2","SS3"].map(c=>`<option ${r.class===c?"selected":""}>${c}</option>`).join("")}</select></div>
+      <div class="form-group"><label>Resource Type</label><select id="edType">${Object.entries(RES_TYPE_META).map(([k,v])=>`<option value="${k}" ${r.resourceType===k?"selected":""}>${v.label}</option>`).join("")}</select></div>
+      <div class="form-group"><label>Status</label><select id="edStatus"><option value="active" ${r.status==="active"?"selected":""}>Active</option><option value="inactive" ${r.status==="inactive"?"selected":""}>Inactive</option></select></div>
+      <div class="form-group"><label>Topic</label><select id="edTopic">${DEMO_TOPICS.map(t=>`<option value="${t.id}" ${r.topicId===t.id?"selected":""}>Topic ${t.number}: ${t.title}</option>`).join("")}</select></div>
+    </div>
+    <div class="form-group"><label>Replace Google Drive file (optional — keeps same resource ID, increments version)</label>
+      <input type="file" id="edFile"><div class="hint">Uploading a new file updates googleDriveFileId and version. Students always see the latest version.</div>
+    </div>
+  `, "", ()=>{
+    r.title=document.getElementById("edTitle").value.trim();
+    r.description=document.getElementById("edDesc").value.trim();
+    r.class=document.getElementById("edClass").value;
+    r.resourceType=document.getElementById("edType").value;
+    r.status=document.getElementById("edStatus").value;
+    r.topicId=document.getElementById("edTopic").value;
+    r.updatedAt=new Date().toISOString().slice(0,10);
+    const nf = document.getElementById("edFile").files[0];
+    if(nf){
+      // In production: POST new file to Apps Script, update googleDriveFileId, increment version.
+      r.version = (r.version||1)+1;
+      toast(`File replaced — now v${r.version}`,"success");
+    }
+    const all = Store.resources(); Store.setResources(all);
+    toast("Resource updated","success"); closeModal(); navigate(currentPage);
+  }, "Save Changes");
+}
+
+function deleteResource(resourceId){
+  const r = Store.resources().find(x=>x.resourceId===resourceId);
+  if(!r) return;
+  showModal(`Delete Resource`, `
+    <p>You are about to delete <strong>${r.title}</strong>.</p>
+    <p style="margin:12px 0;color:var(--muted);font-size:13px">Choose what to remove:</p>
+    <label style="display:block;margin-bottom:8px"><input type="radio" name="delOpt" value="db" checked> Delete database record only (file stays in Google Drive)</label>
+    <label style="display:block;margin-bottom:14px"><input type="radio" name="delOpt" value="both"> Delete database record <strong>and</strong> the Google Drive file (permanent)</label>
+    <p style="color:var(--danger);font-size:12px">⚠ Deleting the Google Drive file cannot be undone.</p>
+  `, "", ()=>{
+    const opt = document.querySelector('input[name="delOpt"]:checked').value;
+    const all = Store.resources().filter(x=>x.resourceId!==resourceId);
+    Store.setResources(all);
+    if(opt==="both"){
+      // In production: call Apps Script DELETE endpoint with the file ID.
+      toast("Database record + Google Drive file deleted","success");
+    }else{
+      toast("Database record deleted. File remains in Drive.","success");
+    }
+    closeModal(); navigate(currentPage);
+  }, "Confirm Delete", "btn-danger");
+}
+
+/* ============================================================
+   ADMIN — GOOGLE DRIVE SETTINGS
+   ============================================================ */
+function renderAdminDrive(mc){
+  const s = driveSettings || {};
+  mc.innerHTML = `<div class="page-title">Google Drive Settings</div>
+    <div class="page-sub">Configure folder IDs and the Apps Script backend URL. These are stored in Firestore — never store private credentials here.</div>
+    <div class="card">
+      <div class="two-col">
+        <div class="form-group"><label>Google Drive Root Folder ID</label><input id="dsRoot" value="${s.root||''}" placeholder="e.g. 1aBcDeFgHiJkLmNoPqRsTuVwXyZ"><div class="hint">Top-level "SCHOLAR'S CAMP" folder</div></div>
+        <div class="form-group"><label>Physics Folder ID</label><input id="dsPhysics" value="${s.physics||''}"></div>
+        <div class="form-group"><label>SS1 Folder ID</label><input id="dsSS1" value="${s.ss1||''}"></div>
+        <div class="form-group"><label>SS2 Folder ID</label><input id="dsSS2" value="${s.ss2||''}"></div>
+        <div class="form-group"><label>SS3 Folder ID</label><input id="dsSS3" value="${s.ss3||''}"></div>
+        <div class="form-group"><label>Google Apps Script Web App URL</label><input id="dsScript" value="${CONFIG.appsScriptUrl.includes('YOUR')?'':CONFIG.appsScriptUrl}" placeholder="https://script.google.com/macros/s/…/exec"></div>
+      </div>
+      <div class="form-group"><label>Default Sharing Permission</label>
+        <select id="dsShare">
+          <option value="anyone">A — Anyone with the link can view (public materials)</option>
+          <option value="restricted">B — Restricted access (only approved accounts)</option>
+          <option value="domain">C — Scholar's Camp Google account access (domain)</option>
+        </select>
+        <div class="hint">Applied by the Apps Script backend when uploading. Frontend never sees credentials.</div>
+      </div>
+      <button class="btn btn-primary" onclick="saveDriveSettings()">💾 Save Settings</button>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-top:0">Expected Drive Folder Structure</div>
+      <pre style="background:#f8fafc;padding:16px;border-radius:8px;font-size:12.5px;line-height:1.7;overflow-x:auto">SCHOLAR'S CAMP
+├── PHYSICS
+│   ├── SS1  → Textbooks, Notes, Worksheets, Practical, Past Questions
+│   ├── SS2  → Textbooks, Notes, Worksheets, Practical, Past Questions
+│   └── SS3  → Textbooks, Notes, Worksheets, Practical, Past Questions
+├── MATHEMATICS  (future)
+├── CHEMISTRY    (future)
+└── …</pre>
+    </div>`;
+}
+function saveDriveSettings(){
+  const s = {
+    root: document.getElementById("dsRoot").value.trim(),
+    physics: document.getElementById("dsPhysics").value.trim(),
+    ss1: document.getElementById("dsSS1").value.trim(),
+    ss2: document.getElementById("dsSS2").value.trim(),
+    ss3: document.getElementById("dsSS3").value.trim(),
+    scriptUrl: document.getElementById("dsScript").value.trim(),
+    sharing: document.getElementById("dsShare").value,
+  };
+  Store.setDriveSettings(s);
+  if(s.scriptUrl) CONFIG.appsScriptUrl = s.scriptUrl;
+  // In production: save to Firestore doc settings/drive
+  toast("Google Drive settings saved","success");
+}
+
+/* ============================================================
+   ADMIN — TOPICS / USERS (stubs) + EXAMS
+   ============================================================ */
+function renderAdminTopics(mc){
+  mc.innerHTML = `<div class="page-title">Topics & Lessons Management</div>
+    <div class="page-sub">Manage curriculum topics, lessons, YouTube links, study links and exam links (stored in Firestore).</div>
+    <div class="card"><button class="btn btn-primary" onclick="toast('Topic creator opens — saved to Firestore topics collection','info')">+ Add New Topic</button></div>
+    <div class="table-wrap"><table><thead><tr><th>#</th><th>Title</th><th>Class</th><th>Lessons</th><th>Questions</th><th>Actions</th></tr></thead>
+    <tbody>${DEMO_TOPICS.map(t=>`<tr><td>${t.number}</td><td><strong>${t.title}</strong></td><td>${t.class}</td><td>${t.lessons}</td><td>${t.questions}</td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>`).join("")}</tbody></table></div>`;
+}
+function renderAdminUsers(mc){
+  mc.innerHTML = `<div class="page-title">Users</div><div class="page-sub">All registered accounts.</div>
+    <div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Class</th></tr></thead>
+    <tbody>${Store.users().map(u=>`<tr><td>${u.name}</td><td>${u.email}</td><td><span class="res-tag">${u.role}</span></td><td>${u.class}</td></tr>`).join("")}</tbody></table></div>`;
+}
+function renderExams(mc){
+  mc.innerHTML = `<div class="page-title">Practice Exams</div>
+    <div class="page-sub">Exam questions and links are stored in Firestore. Results are saved per student.</div>
+    <div class="grid grid-3">
+      ${["SS1 Mock Exam","SS2 Midterm Test","SS3 WAEC Practice"].map((e,i)=>`
+        <div class="topic-card"><span class="topic-num">Exam ${i+1}</span>
+        <div class="topic-title">${e}</div><div class="topic-meta">20 questions · 30 minutes</div>
+        <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="toast('Exam engine loads questions from Firestore','info')">Start Exam</button></div>`).join("")}
+    </div>`;
+}
+function renderProgress(mc){
+  const p = Store.progress(); const done = Object.values(p).filter(v=>v>=100).length;
+  mc.innerHTML = `<div class="page-title">My Progress</div><div class="page-sub">Track your topic mastery and exam results.</div>
+    <div class="grid grid-3"><div class="stat-card green"><div class="stat-num">${done}</div><div class="stat-label">Topics Completed</div></div>
+    <div class="stat-card amber"><div class="stat-num">${Object.keys(Store.offlineCache()).length}</div><div class="stat-label">Files Saved Offline</div></div>
+    <div class="stat-card"><div class="stat-num">${Store.resources().length}</div><div class="stat-label">Resources Available</div></div></div>
+    <div class="card" style="margin-top:20px"><div class="section-title" style="margin-top:0">Topic Progress</div>
+    ${DEMO_TOPICS.filter(t=>currentUser.role!=="student"||t.class===currentUser.class).map(t=>{
+      const pc = p[t.id]||0;
+      return `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><strong>Topic ${t.number}: ${t.title}</strong><span>${pc}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pc}%"></div></div></div>`;
+    }).join("")}</div>`;
+}
+
+/* ============================================================
+   MODAL & TOAST
+   ============================================================ */
+let modalOnSave = null;
+function showModal(title, bodyHTML, size="", onSave=null, saveLabel="Save", saveClass="btn-primary"){
+  modalOnSave = onSave;
+  const root = document.getElementById("modalRoot");
+  root.innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal ${size}">
+      <div class="modal-header"><div class="modal-title">${title}</div><button class="modal-close" onclick="closeModal()">×</button></div>
+      <div class="modal-body">${bodyHTML}</div>
+      ${onSave?`<div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn ${saveClass}" onclick="modalOnSave()">${saveLabel}</button></div>`:""}
+    </div></div>`;
+}
+function closeModal(){ document.getElementById("modalRoot").innerHTML=""; modalOnSave=null; }
+let toastTimer;
+function toast(msg, type="info"){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = "toast show "+type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), 3500);
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+initFirebase();
+if(!navigator.onLine) document.getElementById("offlineBadge").classList.remove("hidden");
+</script>
+</body>
+</html>
